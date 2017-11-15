@@ -59,9 +59,6 @@ int main(int argc, char* argv[]) {
     char* reading_buffer = malloc((file_size+1)*sizeof(char));
     char* tmp_buffer = malloc((file_size+1)*sizeof(char));
 
-    char* reading_buffer = malloc((file_size+1)*sizeof(char));
-    char* tmp_buffer = malloc((file_size+1)*sizeof(char));
-
     // reading the file content into a buffer
     int file_pointer = 0;
     while (file_pointer  = read(fd, reading_buffer, file_size)){
@@ -90,7 +87,7 @@ int main(int argc, char* argv[]) {
     free(reading_buffer);
 
     int closed = close(fd);
-    if (suc < 0){
+    if (closed < 0){
         printf("file could not be closed!");
         return 1;
     }
