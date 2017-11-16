@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     }
 
     char* hw1_dir = "HW1DIR";
-
+    int closed = 0;
 
     // check if hw1 is defined
     if (!getenv(hw1_dir)){
@@ -36,33 +36,55 @@ int main(int argc, char* argv[]) {
     strcat(file_path, getenv(hw1_tf));
 
     // try to open file path
-    struct stat buffer;
+
     int fd = open(file_path, O_RDONLY);
     if (fd < 0){
         printf("Problem with file reading...");
+        closed = close(fd);
         return 1;
     }
 
+    struct stat buffer;
     int file_status = fstat(fd, &buffer);
+
+     int file_size = buffer.st_size;
+     printf("file size is %d\n", file_size);
 
     if (file_status < 0 ){
         printf("file status is not right");
+        closed = close(fd);
         return 1;
     }
-
-    int file_size = buffer.st_size;
-    printf("file size is %d\n", file_size);
 
     char* str1 = argv[1];
     char* str2 = argv[2];
 
     char* reading_buffer = malloc((file_size+1)*sizeof(char));
-    char* tmp_buffer = malloc((file_size+1)*sizeof(char));
+    if (reading_buffer == NULL){
+    	free(reading_buffer);
+    	closed = close(fd);
+    	return 1;
+    }
+
+    char* tmp_buffer = malloc((file_size+1)*sizeof(char)*100);
+    if (tmp_buffer == NULL){
+        free(tmp_buffer);
+        free(reading_buffer);
+        closed = close(fd);
+        return 1;
+    }
 
     // reading the file content into a buffer
-    int file_pointer = 0;
-    while (file_pointer  = read(fd, reading_buffer, file_size)){
-        reading_buffer[file_pointer ] = '\0';
+    int file_pointer = 1;
+    while (file_pointer != 0){
+    	file_pointer = read(fd, reading_buffer, file_size);
+    	if (file_pointer < 0){
+    	    free(tmp_buffer);
+    	    free(reading_buffer);
+    	    closed = close(fd);
+    		return 1;
+    	}
+        reading_buffer[file_pointer] = '\0';
     }
 
     printf("new string is: %s\n", reading_buffer);
@@ -82,11 +104,10 @@ int main(int argc, char* argv[]) {
         p++;
     }
 
-    printf("new string is: %s", tmp_buffer);
     free(tmp_buffer);
     free(reading_buffer);
 
-    int closed = close(fd);
+    closed = close(fd);
     if (closed < 0){
         printf("file could not be closed!");
         return 1;
