@@ -47,8 +47,7 @@ int main(int argc, char* argv[]) {
     struct stat buffer;
     int file_status = fstat(fd, &buffer);
 
-     int file_size = buffer.st_size;
-     printf("file size is %d\n", file_size);
+    int file_size = buffer.st_size;
 
     if (file_status < 0 ){
         printf("file status is not right");
@@ -59,14 +58,14 @@ int main(int argc, char* argv[]) {
     char* str1 = argv[1];
     char* str2 = argv[2];
 
-    char* reading_buffer = malloc((file_size+1)*sizeof(char));
+    char* reading_buffer = malloc((file_size+1)*sizeof(char)*10);
     if (reading_buffer == NULL){
-    	free(reading_buffer);
-    	closed = close(fd);
-    	return 1;
+        free(reading_buffer);
+        closed = close(fd);
+        return 1;
     }
 
-    char* tmp_buffer = malloc((file_size+1)*sizeof(char)*100);
+    char* tmp_buffer = malloc((file_size+1)*sizeof(char)*10);
     if (tmp_buffer == NULL){
         free(tmp_buffer);
         free(reading_buffer);
@@ -77,18 +76,14 @@ int main(int argc, char* argv[]) {
     // reading the file content into a buffer
     int file_pointer = 1;
     while (file_pointer != 0){
-    	file_pointer = read(fd, reading_buffer, file_size);
-    	if (file_pointer < 0){
-    	    free(tmp_buffer);
-    	    free(reading_buffer);
-    	    closed = close(fd);
-    		return 1;
-    	}
-        reading_buffer[file_pointer] = '\0';
+        file_pointer = read(fd, reading_buffer, file_size);
+        if (file_pointer < 0) {
+            free(tmp_buffer);
+            free(reading_buffer);
+            closed = close(fd);
+            return 1;
+        }
     }
-
-    printf("new string is: %s\n", reading_buffer);
-    printf("str1 is %s\nstr2 is %s\n", str1, str2);
 
     // replacing one string with another
     char* p = reading_buffer;
@@ -104,8 +99,11 @@ int main(int argc, char* argv[]) {
         p++;
     }
 
-    free(tmp_buffer);
+    printf("%s", tmp_buffer);
+
+
     free(reading_buffer);
+    free(tmp_buffer);
 
     closed = close(fd);
     if (closed < 0){
