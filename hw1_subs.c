@@ -58,14 +58,14 @@ int main(int argc, char* argv[]) {
     char* str1 = argv[1];
     char* str2 = argv[2];
 
-    char* reading_buffer = malloc((file_size+1)*sizeof(char)*10);
+    char* reading_buffer = malloc((file_size+1)*sizeof(char));
     if (reading_buffer == NULL){
         free(reading_buffer);
         closed = close(fd);
         return 1;
     }
 
-    char* tmp_buffer = malloc((file_size+1)*sizeof(char)*10);
+    char* tmp_buffer = malloc((file_size+1)*sizeof(char));
     if (tmp_buffer == NULL){
         free(tmp_buffer);
         free(reading_buffer);
@@ -90,8 +90,10 @@ int main(int argc, char* argv[]) {
     int last_p = 0;
 
     while ((p=strstr(p, str1))){
-        strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
-        
+        // strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
+
+        memcpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
+
         tmp_buffer[p-reading_buffer - last_p] = '\0';
         printf("%s", tmp_buffer);
         printf("%s", str2);
@@ -99,7 +101,7 @@ int main(int argc, char* argv[]) {
         last_p = p - reading_buffer + strlen(str1) - 1;
     }
 
-    strcpy(tmp_buffer, reading_buffer + last_p);
+    memcpy(tmp_buffer, reading_buffer + last_p, file_size-last_p + 1);
     printf("%s", tmp_buffer);
 
     free(reading_buffer);
