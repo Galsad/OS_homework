@@ -74,15 +74,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-//    reading_buffer = mmap(0, file_size, PROT_READ, MAP_SHARED,fd, 0 );
-//    if (reading_buffer == MAP_FAILED){
-//        free(tmp_buffer);
-//        free(reading_buffer);
-//        closed = close(fd);
-//        return 1;
-//    }
-
-     // reading the file content into a buffer
 
     int amount_of_read_bytes = 0;
     int file_pointer = 0;
@@ -99,29 +90,42 @@ int main(int argc, char* argv[]) {
     }
 
     // replacing one string with another
-    char* p = reading_buffer;
+
+    reading_buffer[file_size + 1] = '\0';
+
+    char* string_buffer = malloc((file_size+1)*sizeof(char));
+    if (string_buffer == NULL){
+        free(tmp_buffer);
+        free(reading_buffer);
+        closed = close(fd);
+        return 1;
+    }
+
+    memcpy(string_buffer, reading_buffer, file_size);
+    string_buffer[file_size+1] = '\0';
+
+    free(reading_buffer);
+
+    char* p = string_buffer;
     int last_p = 0;
-	reading_buffer[file_size + 1] = '\0';
-	
-     while ((p=strstr(p, str1))){
-        // strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
 
-        memcpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
+    while ((p=strstr(p, str1))){
+        memcpy(tmp_buffer, string_buffer + last_p, p-string_buffer - last_p);
 
-        tmp_buffer[p-reading_buffer - last_p] = '\0';
+        tmp_buffer[p-string_buffer - last_p] = '\0';
         printf("%s", tmp_buffer);
         printf("%s", str2);
         p ++;
-        last_p = p - reading_buffer + strlen(str1) - 1;
+        last_p = p - string_buffer + strlen(str1) - 1;
     }
 
 
     //strcpy(tmp_buffer, reading_buffer + last_p);
-    memcpy(tmp_buffer, reading_buffer + last_p, file_size-last_p);
+    memcpy(tmp_buffer, string_buffer + last_p, file_size-last_p);
     tmp_buffer[file_size - last_p] = '\0';
     printf("%s", tmp_buffer);
 
-    free(reading_buffer);
+    free(string_buffer);
     free(tmp_buffer);
 
     closed = close(fd);
