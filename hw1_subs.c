@@ -92,40 +92,26 @@ int main(int argc, char* argv[]) {
     // replacing one string with another
 
     reading_buffer[file_size + 1] = '\0';
-
-    char* string_buffer = malloc((file_size+1)*sizeof(char));
-    if (string_buffer == NULL){
-        free(tmp_buffer);
-        free(reading_buffer);
-        closed = close(fd);
-        return 1;
-    }
-
-    memcpy(string_buffer, reading_buffer, file_size);
-    string_buffer[file_size+1] = '\0';
-
-    free(reading_buffer);
-
-    char* p = string_buffer;
+    char* p = reading_buffer;
     int last_p = 0;
 
     while ((p=strstr(p, str1))){
-        memcpy(tmp_buffer, string_buffer + last_p, p-string_buffer - last_p);
+        memcpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer- last_p);
 
-        tmp_buffer[p-string_buffer - last_p] = '\0';
+        tmp_buffer[p-reading_buffer - last_p] = '\0';
         printf("%s", tmp_buffer);
         printf("%s", str2);
         p ++;
-        last_p = p - string_buffer + strlen(str1) - 1;
+        last_p = p - reading_buffer + strlen(str1) - 1;
     }
 
 
     //strcpy(tmp_buffer, reading_buffer + last_p);
-    memcpy(tmp_buffer, string_buffer + last_p, file_size-last_p);
+    memcpy(tmp_buffer, reading_buffer + last_p, file_size-last_p);
     tmp_buffer[file_size - last_p] = '\0';
     printf("%s", tmp_buffer);
 
-    free(string_buffer);
+    free(reading_buffer);
     free(tmp_buffer);
 
     closed = close(fd);
