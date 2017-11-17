@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
 
     // replacing one string with another
 
-    reading_buffer[amount_of_read_bytes + 1] = '\0';
+    reading_buffer[amount_of_read_bytes] = '\0';
     char* p = reading_buffer;
     int last_p = 0;
 
