@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     while ((p=strstr(p, str1))){
         // strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
 
-        strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
+        memcpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
 
         tmp_buffer[p-reading_buffer - last_p] = '\0';
         printf("%s", tmp_buffer);
