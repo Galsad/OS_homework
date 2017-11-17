@@ -101,7 +101,8 @@ int main(int argc, char* argv[]) {
     // replacing one string with another
     char* p = reading_buffer;
     int last_p = 0;
-
+	reading_buffer[file_size + 1] = '\0';
+	
      while ((p=strstr(p, str1))){
         // strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
 
