@@ -58,14 +58,14 @@ int main(int argc, char* argv[]) {
     char* str1 = argv[1];
     char* str2 = argv[2];
 
-    char* reading_buffer = malloc((file_size+1)*sizeof(char)*10);
+    char* reading_buffer = malloc((file_size+1)*sizeof(char));
     if (reading_buffer == NULL){
         free(reading_buffer);
         closed = close(fd);
         return 1;
     }
 
-    char* tmp_buffer = malloc((file_size+1)*sizeof(char)*10);
+    char* tmp_buffer = malloc((file_size+1)*sizeof(char));
     if (tmp_buffer == NULL){
         free(tmp_buffer);
         free(reading_buffer);
@@ -87,19 +87,21 @@ int main(int argc, char* argv[]) {
 
     // replacing one string with another
     char* p = reading_buffer;
+    int last_p = 0;
+
+    printf("%s", reading_buffer);
 
     while ((p=strstr(p, str1))){
-        // read from the next str1 - copy to buf the orig_str till str1
-        strncpy(tmp_buffer, reading_buffer, p-reading_buffer);
-        tmp_buffer[p-reading_buffer] = '\0';
-        // add to buffer str2
-        strcat(tmp_buffer, str2);
-        strcat(tmp_buffer, p + strlen(str1));
-        strcpy(reading_buffer, tmp_buffer);
-        p++;
+        strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
+        tmp_buffer[p-reading_buffer - last_p] = '\0';
+        printf(tmp_buffer);
+        printf(str2);
+        p ++;
+        last_p = p - reading_buffer + strlen(str1) - 1;
     }
 
-    printf("%s", tmp_buffer);
+    strcpy(tmp_buffer, reading_buffer + last_p);
+    printf(tmp_buffer);
 
 
     free(reading_buffer);
