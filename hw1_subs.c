@@ -94,14 +94,14 @@ int main(int argc, char* argv[]) {
     while ((p=strstr(p, str1))){
         strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
         tmp_buffer[p-reading_buffer - last_p] = '\0';
-        printf(tmp_buffer);
-        printf(str2);
+        printf("%s", tmp_buffer);
+        printf("%s", str2);
         p ++;
         last_p = p - reading_buffer + strlen(str1) - 1;
     }
 
     strcpy(tmp_buffer, reading_buffer + last_p);
-    printf(tmp_buffer);
+    printf("%s", tmp_buffer);
 
 
     free(reading_buffer);
