@@ -89,10 +89,9 @@ int main(int argc, char* argv[]) {
     char* p = reading_buffer;
     int last_p = 0;
 
-    printf("%s", reading_buffer);
-
     while ((p=strstr(p, str1))){
         strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
+        
         tmp_buffer[p-reading_buffer - last_p] = '\0';
         printf("%s", tmp_buffer);
         printf("%s", str2);
@@ -102,7 +101,6 @@ int main(int argc, char* argv[]) {
 
     strcpy(tmp_buffer, reading_buffer + last_p);
     printf("%s", tmp_buffer);
-
 
     free(reading_buffer);
     free(tmp_buffer);
