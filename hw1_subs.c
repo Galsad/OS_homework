@@ -58,14 +58,14 @@ int main(int argc, char* argv[]) {
     char* str1 = argv[1];
     char* str2 = argv[2];
 
-    char* reading_buffer = malloc((file_size+1)*sizeof(char));
+    char* reading_buffer = malloc((file_size+10)*sizeof(char));
     if (reading_buffer == NULL){
         free(reading_buffer);
         closed = close(fd);
         return 1;
     }
 
-    char* tmp_buffer = malloc((file_size+1)*sizeof(char));
+    char* tmp_buffer = malloc((file_size+10)*sizeof(char));
     if (tmp_buffer == NULL){
         free(tmp_buffer);
         free(reading_buffer);
