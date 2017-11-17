@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 int main(int argc, char* argv[]) {
 
@@ -73,10 +74,22 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // reading the file content into a buffer
-    int file_pointer = 1;
-    while (file_pointer != 0){
-        file_pointer = read(fd, reading_buffer, file_size);
+//    reading_buffer = mmap(0, file_size, PROT_READ, MAP_SHARED,fd, 0 );
+//    if (reading_buffer == MAP_FAILED){
+//        free(tmp_buffer);
+//        free(reading_buffer);
+//        closed = close(fd);
+//        return 1;
+//    }
+
+     // reading the file content into a buffer
+
+    int amount_of_read_bytes = 0;
+    int file_pointer = 0;
+
+    while (amount_of_read_bytes < file_size){
+        file_pointer = read(fd, reading_buffer + amount_of_read_bytes, file_size);
+        amount_of_read_bytes += file_pointer;
         if (file_pointer < 0) {
             free(tmp_buffer);
             free(reading_buffer);
@@ -92,7 +105,7 @@ int main(int argc, char* argv[]) {
     while ((p=strstr(p, str1))){
         // strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
 
-        memcpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
+        strncpy(tmp_buffer, reading_buffer + last_p, p-reading_buffer - last_p);
 
         tmp_buffer[p-reading_buffer - last_p] = '\0';
         printf("%s", tmp_buffer);
@@ -101,7 +114,8 @@ int main(int argc, char* argv[]) {
         last_p = p - reading_buffer + strlen(str1) - 1;
     }
 
-    memcpy(tmp_buffer, reading_buffer + last_p, file_size-last_p + 1);
+
+    strcpy(tmp_buffer, reading_buffer + last_p);
     printf("%s", tmp_buffer);
 
     free(reading_buffer);
