@@ -162,18 +162,3 @@ int finalize(void){
     return 0;
 }
 
-int main(int argc,char** argv){
-    prepare();
-
-    char* arglist0[] = {"ls", "-la", "|", "grep", "-i", "hw", NULL};
-    process_arglist(6, arglist0);
-
-    char* arglist2[] = {"sleep", "10", "&", NULL};
-    process_arglist(3, arglist2);
-
-    char* arglist[] = {"sleep", "60", NULL};
-    process_arglist(2, arglist);
-
-    finalize();
-}
-
