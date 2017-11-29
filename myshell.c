@@ -28,7 +28,7 @@ bool has_ampercent(int count, char** arglist){
 // run child command in case it's a legal one, if not, returns 0 - this function takes care only in case there is not |
 void take_care_of_single_child(char** arglist){
     if (execvp(arglist[0], arglist) == -1){
-        fprintf(stderr,"execvp failed\n",15);
+        fprintf(stderr,"execvp failed\n");
         exit(1);
     }
 }
@@ -44,7 +44,7 @@ int process_arglist(int count, char** arglist){
 
     //ignore_signal.sa_sigaction = signal_ignore_handler;
     if (sigaction(SIGINT, &ignore_signal, NULL) != 0){
-        fprintf(stderr,"error initializing signal\n",27);
+        fprintf(stderr,"error initializing signal\n");
         exit(1);
     }
 
@@ -52,7 +52,7 @@ int process_arglist(int count, char** arglist){
     int pipe_index = -1;
     // checks if there is positive amount of commands, if not, exit
     if (count <= 0){
-        fprintf(stderr,"non positives amount of commands!\n",30);
+        fprintf(stderr,"non positives amount of commands!\n");
         return 1;
     }
 
@@ -68,7 +68,7 @@ int process_arglist(int count, char** arglist){
     int pipe_fd[2] = {0};
     if (pipe_index != -1){
         if (pipe(pipe_fd)){
-            fprintf(stderr,"error in pipe!\n",16);
+            fprintf(stderr,"error in pipe!\n");
             exit(1);
         }
     }
@@ -95,7 +95,7 @@ int process_arglist(int count, char** arglist){
             sigaction(SIGINT, &default_signal, NULL);
             close(pipe_fd[0]);
             if (dup2(pipe_fd[1], 1) == -1){
-                fprintf(stderr,"error in dup!\n",15);
+                fprintf(stderr,"error in dup!\n");
                 exit(1);
             }
             close(pipe_fd[1]);
@@ -115,7 +115,7 @@ int process_arglist(int count, char** arglist){
             sigaction(SIGINT, &default_signal, NULL);
             close(pipe_fd[1]);
             if (dup2(pipe_fd[0], 0) == -1){
-                fprintf(stderr,"error in dup!\n\0",15);
+                fprintf(stderr,"error in dup!\n");
                 exit(1);
             }
             close(pipe_fd[0]);
