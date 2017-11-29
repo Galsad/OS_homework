@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <sys/types.h>
 
 
 // locates the pipe index if exists
