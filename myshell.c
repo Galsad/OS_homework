@@ -6,7 +6,6 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <bits/sigaction.h>
 
 
 // locates the pipe index if exists
