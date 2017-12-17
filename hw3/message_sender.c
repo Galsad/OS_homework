@@ -27,7 +27,7 @@ int main(int argc, char** argv){
     }
 
     printf("before ioctl \n");
-    ret_val = ioctl(file_desc, IOCTL_COMMAND_ID, channel_id);
+    ret_val = ioctl(file_desc, MSG_SLOT_CHANNEL, channel_id);
     printf("before write \n");
     ret_val = write(file_desc, message, MESSAGE_SIZE);
     printf("before close \n");

@@ -8,7 +8,8 @@
 #define MESSAGE_SIZE 128
 #define MAJOR_NUM 244
 #define DEVICE_RANGE_NAME "very_cool_dev"
-#define IOCTL_COMMAND_ID _IOW(MAJOR_NUM, 0, unsigned long)
+
+#define MSG_SLOT_CHANNEL _IOW(MAJOR_NUM, 0, unsigned long)
 
 
 #include <linux/kernel.h>   /* We're doing kernel work */

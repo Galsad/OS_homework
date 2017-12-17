@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define IOCTL_COMMAND_ID _IOW(MAJOR_NUM, 0, unsigned long)
 int main(int argc, char** argv){
     if (argc != 3){
         printf("number of argument is not correct \n");
@@ -28,7 +27,7 @@ int main(int argc, char** argv){
         exit(-1);
     }
 
-    ret_val = ioctl(file_desc, IOCTL_COMMAND_ID, channel_id);
+    ret_val = ioctl(file_desc, MSG_SLOT_CHANNEL, channel_id);
     ret_val = read(file_desc, reading_buffer, MESSAGE_SIZE);
     ret_val = close(file_desc);
 
