@@ -86,6 +86,12 @@ static long device_ioctl( struct   file* file, unsigned int   ioctl_command_id, 
         printk("adding channel! \n");
         // create a new channel
         struct channel_node* new_channel_node = kmalloc(sizeof(struct channel_node), GFP_KERNEL);
+        if (new_channel_node == NULL){
+            printk("could not allocate memory for new_channel_node");
+            kfree(new_channel_node);
+            return -EINVAL;
+        }
+
         new_channel_node->channel_id = ioctl_param;
         new_channel_node->next = NULL;
         new_channel_node->minor = minor;
@@ -123,6 +129,12 @@ static long device_ioctl( struct   file* file, unsigned int   ioctl_command_id, 
     if (add_new_node == 0){
         printk("adding new channel!\n");
         struct channel_node* new_node = kmalloc(sizeof(struct channel_node), GFP_KERNEL);
+        if (new_node == NULL){
+            printk("could not allocate memory for new_node");
+            kfree(new_node);
+            return -EINVAL;
+        }
+
         new_node->next = NULL;
         new_node->minor = minor;
         new_node->has_data = 0;
@@ -144,6 +156,12 @@ static int device_open( struct inode* inode, struct file*  file )
         if (num_of_files == 0){
             num_of_files += 1;
             file_list = kmalloc(sizeof(struct file_node), GFP_KERNEL);
+            if (file_list == NULL){
+                printk("could not allocate memory for file_list");
+                kfree(file_list);
+                return -EINVAL;
+            }
+
             file_list->next = NULL;
             file_list->minor = minor;
             file_list->active_channel_id = NULL;
@@ -170,6 +188,13 @@ static int device_open( struct inode* inode, struct file*  file )
         // file does not exist in file list - add it
         num_of_files += 1;
         struct file_node* new_node = kmalloc(sizeof(struct file_node), GFP_KERNEL);
+        if (new_node == NULL){
+            printk("could not allocate memory for file_list");
+            kfree(new_node);
+            return -EINVAL;
+        }
+
+
         new_node->minor = minor;
         p->next = new_node;
         p->active_channel_id = NULL;
