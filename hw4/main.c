@@ -20,7 +20,7 @@ int number_of_writers;
 int output_fd = 0;
 int chunk = 0;
 int rc; // checking whether write failed!
-int length_to_write;
+int max_block;
 
 // XORing a block to the common block
 void XOR_blocks(char* block, int block_size){
@@ -93,10 +93,14 @@ void* worker_job(void* t){
         }
 
         num_of_done_jobs += 1;
+        if (last_bytes_read > max_block){
+            max_block = last_bytes_read;
+        }
+
         // if you are the last job - write to output
         if (num_of_done_jobs == number_of_writers){
             //TODO - fix buffer size to the actual length
-            rc = write(output_fd, common_buffer, last_bytes_read);
+            rc = write(output_fd, common_buffer, max_block);
             if (rc < 0){
                 printf("couldn't write to file!");
                 exit(2);
@@ -105,6 +109,7 @@ void* worker_job(void* t){
             reset_common_block();
             num_of_done_jobs = 0;
             chunk += 1;
+            max_block = 0;
 
             rc = pthread_cond_broadcast(&lock2);
             if (rc < 0){
@@ -146,7 +151,7 @@ void* worker_job(void* t){
 
     else{
         number_of_writers -= 1;
-        rc = write(output_fd, common_buffer, last_bytes_read);
+        rc = write(output_fd, common_buffer, max_block);
         if (rc < 0){
             printf("still can't write...\n");
             exit(2);
@@ -154,6 +159,7 @@ void* worker_job(void* t){
         reset_common_block();
         num_of_done_jobs = 0;
         chunk += 1;
+        max_block = 0;
 
         rc = pthread_cond_broadcast(&lock2);
         if (rc < 0){
@@ -169,63 +175,6 @@ void* worker_job(void* t){
 
 
 }
-
-//void* busy_work(void* t){
-//    printf("in busy work!\n");
-//    struct thread_info* tinfo = t;
-//    char tmp_buffer [BUFFER_SIZE];
-//    int file_pointer = 0;
-//
-//
-//    // if thread finished reading his file
-//    // TODO -- add lock on the inc
-//    if (tinfo->is_done == true){
-//        num_of_done_jobs += 1;
-//        printf("num of jobs is %d \n", num_of_done_jobs);
-//    }
-//
-//    // TODO -- add lock here and check errors
-//    else{
-//        printf("have some work to do!\n");
-//        file_pointer = read(tinfo->fid, tmp_buffer, BUFFER_SIZE);
-//        // TODO -- need to make sure that amount of read bytes is set to 0 after every time!
-//        tinfo->amount_of_read_bytes = tinfo->amount_of_read_bytes + file_pointer;
-//        printf("num of read bytes are: %d\n", tinfo->amount_of_read_bytes);
-//
-//        pthread_mutex_lock(&lock);
-//
-//        XOR_blocks(tmp_buffer, tinfo->amount_of_read_bytes);
-//        num_of_done_jobs += 1;
-//        // if whole file was read set is_done to true
-//        if (tinfo->amount_of_read_bytes == tinfo->file_length){
-//            tinfo->is_done = true;
-//        }
-//    }
-//
-//    // all thread are done - write the data to the output file and set num_of_jobs_done to 0
-//    printf("num of jobs is %d \n", num_of_done_jobs);
-//    if (num_of_done_jobs == tinfo->num_of_threads){
-//        printf("reseting... \n");
-//        num_of_done_jobs = 0;
-//        // TODO - check if write worked and check if need to write less in last block
-//        write(tinfo->output_fid, common_buffer, BUFFER_SIZE);
-//        reset_common_block();
-//        pthread_mutex_unlock(&lock2);
-//    }
-//    sleep(1);
-//    pthread_mutex_unlock(&lock);
-//}
-
-//// checks if all the files are done writing their content to output
-//bool all_done(struct thread_info **tinfo, int lst_size){
-//    for (int i=0; i<lst_size; i++){
-//        if (tinfo[i]->is_done == false){
-//            return false;
-//        }
-//    }
-//    return true;
-//}
-
 
 int main(int argc, char** argv) {
     if (argc <= 2){
