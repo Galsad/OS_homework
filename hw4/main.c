@@ -1,11 +1,8 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <memory.h>
 
 #define BUFFER_SIZE (1<<20)
 
@@ -16,15 +13,29 @@ int num_of_done_jobs = 0;
 pthread_mutex_t lock;
 pthread_cond_t lock2;
 
-int number_of_writers;
-int output_fd = 0;
-int chunk = 0;
+int number_of_writers; // number of inputs
+int output_fd = 0; // fd of output file
+int chunk = 0; // number of current chunk
 int rc; // checking whether write failed!
-int max_block;
+int max_block; //maximum size to write to a block
+int output_length = 0;
+
+void lock_1(){
+    if (pthread_mutex_lock(&lock) != 0){
+        printf("can't lock\n");
+        exit(3);
+    }
+}
+
+void unlock_1(){
+    if (pthread_mutex_unlock(&lock) != 0 ) {
+        printf("can't unlock");
+        exit(3);
+    }
+}
 
 // XORing a block to the common block
 void XOR_blocks(char* block, int block_size){
-    printf("in XOR blocks!\n");
     int i=0;
     for (i=0; i < block_size; i++){
         common_buffer[i] ^= block[i];
@@ -39,7 +50,7 @@ void reset_common_block(){
     }
 }
 
-
+// read next buffer to a chunk
 int read_next_chunk(int fd, char* tmp_buffer){
     int last_bytes_read = 0;
     // reading to buffer
@@ -55,6 +66,7 @@ int read_next_chunk(int fd, char* tmp_buffer){
 
 
 void* worker_job(void* t){
+    // init thread vars
     char tmp_buffer [BUFFER_SIZE];
     char* file_path = (char*) t;
     int fd = open(file_path, O_RDONLY);
@@ -62,16 +74,12 @@ void* worker_job(void* t){
     int last_bytes_read;
 
     if (fd < 0){
-        //TODO - print error
         printf("cannot open file");
         exit(1);
     }
 
     while ( (last_bytes_read = read_next_chunk(fd, tmp_buffer)) > 0){
-        if (pthread_mutex_lock(&lock) != 0){
-            printf("can't lock\n");
-            exit(2);
-        }
+        lock_1();
 
         if (current_chunk != chunk){
             if (pthread_cond_wait(&lock2, &lock) != 0 ){
@@ -82,16 +90,8 @@ void* worker_job(void* t){
 
         // XORing the data
         XOR_blocks(tmp_buffer, last_bytes_read);
-        if (pthread_mutex_unlock(&lock) != 0 ) {
-            printf("can't unlock");
-            exit(2);
-        }
 
-        if (pthread_mutex_lock(&lock) != 0){
-            printf("can't lock\n");
-            exit(2);
-        }
-
+        // inc the number of done jobs
         num_of_done_jobs += 1;
         if (last_bytes_read > max_block){
             max_block = last_bytes_read;
@@ -99,16 +99,17 @@ void* worker_job(void* t){
 
         // if you are the last job - write to output
         if (num_of_done_jobs == number_of_writers){
-            //TODO - fix buffer size to the actual length
             rc = write(output_fd, common_buffer, max_block);
             if (rc < 0){
                 printf("couldn't write to file!");
                 exit(2);
             }
-            // reset the buffer
+
+            // reset the buffer and parameters!
             reset_common_block();
             num_of_done_jobs = 0;
             chunk += 1;
+            output_length += max_block;
             max_block = 0;
 
             rc = pthread_cond_broadcast(&lock2);
@@ -117,22 +118,12 @@ void* worker_job(void* t){
                 exit(2);
             }
         }
-
-        // unlock !
-        if (pthread_mutex_unlock(&lock) != 0 ) {
-            printf("can't unlock");
-            exit(2);
-        }
-
+        unlock_1();
         current_chunk += 1;
 
     } // end of while
 
-    // lock
-    if (pthread_mutex_lock(&lock) != 0){
-        printf("can't lock\n");
-        exit(2);
-    }
+    lock_1();
 
     if (current_chunk != chunk){
         if (pthread_cond_wait(&lock2, &lock) != 0 ){
@@ -143,10 +134,7 @@ void* worker_job(void* t){
 
     if (num_of_done_jobs != number_of_writers - 1){
         number_of_writers -= 1;
-        if (pthread_mutex_unlock(&lock) != 0){
-            printf("can't lock\n");
-            exit(2);
-        }
+        unlock_1();
     }
 
     else{
@@ -166,14 +154,8 @@ void* worker_job(void* t){
             printf("can't unlock 2!");
             exit(2);
         }
-
-        if (pthread_mutex_unlock(&lock) != 0){
-            printf("can't lock\n");
-            exit(2);
-        }
+        unlock_1();
     }
-
-
 }
 
 int main(int argc, char** argv) {
@@ -182,13 +164,19 @@ int main(int argc, char** argv) {
         exit (-1);
     }
 
+    // open output and print welcome message
     output_fd = open(argv[1], O_WRONLY | O_TRUNC);
+    if (output_fd < 0){
+        printf("cannot open output file!");
+        exit(4);
+    }
     printf("Hello, creating %s from %d input files\n", argv[1], argc - 2);
 
     // initialize variables for the program
     number_of_writers = argc - 2;
     pthread_t* thread_ids = malloc(number_of_writers * sizeof(pthread_t));
 
+    // create thread for each input file
     size_t i = 0;
     for (i=0; i<number_of_writers; i++){
         pthread_create(&thread_ids[i], NULL, worker_job, argv[i+2]);
@@ -199,13 +187,17 @@ int main(int argc, char** argv) {
         pthread_join(thread_ids[i], NULL);
     }
 
+    //destroy locks
+    pthread_mutex_destroy(&lock);
+    pthread_cond_destroy(&lock2);
+
     // close output file
     close(output_fd);
 
+    printf("Created %s with size %d bytes\n", argv[1], output_length);
+
     // free all variables!
     free(thread_ids);
-
-    printf("I am all good!\n");
 
     return 0;
 }
