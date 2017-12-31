@@ -156,6 +156,7 @@ void* worker_job(void* t){
         }
         unlock_1();
     }
+    pthread_exit( (void*) t );
 }
 
 int main(int argc, char** argv) {
