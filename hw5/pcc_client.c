@@ -19,9 +19,6 @@
 #include <sys/mman.h>
 
 
-#define DELIM "."
-
-
 // checks if the ip is valid one or not
 int valid_digit(char *ip_str)
 {
@@ -42,7 +39,7 @@ bool is_valid_ip(char *ip_str) {
     if (ip_str == NULL)
         return false;
 
-    ptr = strtok(ip_str, DELIM);
+    ptr = strtok(ip_str, ".");
 
     if (ptr == NULL)
         return false;
@@ -58,7 +55,7 @@ bool is_valid_ip(char *ip_str) {
         /* check for valid IP */
         if (num >= 0 && num <= 255) {
             /* parse remaining string */
-            ptr = strtok(NULL, DELIM);
+            ptr = strtok(NULL, ".");
             if (ptr != NULL)
                 ++dots;
         } else
@@ -76,9 +73,8 @@ void read_from_devurandom(int n, char* random_data_buffer){
     int randomData = open("/dev/urandom", O_RDONLY);
     if (randomData < 0)
     {
-        // TODO - something went wrong - need to print error
-        printf("error occurred!\n");
-        exit(1);
+        printf("ERROR: %s\n", strerror(errno));
+        exit(-1);
     }
 
     else
@@ -86,11 +82,9 @@ void read_from_devurandom(int n, char* random_data_buffer){
         ssize_t result = read(randomData, random_data_buffer, n);
         if (result < 0)
         {
-            // TODO - something went wrong - need to print error
-            printf("error occurred!");
-            exit(1);
+            printf("ERROR: %s\n", strerror(errno));
+            exit(-1);
         }
-        printf("random data is: %s\n", random_data_buffer);
     }
 }
 
@@ -98,7 +92,7 @@ int main(int argc, char* argv[]){
 
     if (argc != 4){
         printf("usage - server name / ip, host, number of bytes to send\n");
-        exit(1);
+        exit(-1);
     }
 
     struct addrinfo hints, *infoptr;
@@ -110,7 +104,6 @@ int main(int argc, char* argv[]){
     int count_from_server;
 
     struct sockaddr_in serv_addr; // where we Want to get to
-    socklen_t addrsize = sizeof(struct sockaddr_in );
 
     // ip add is defined twice for checking if legal IP
     char* ip_add = argv[1];
@@ -126,8 +119,6 @@ int main(int argc, char* argv[]){
 
     // got IP
     if (is_valid_ip(ip_add) == true){
-        printf("port is %d, and ip is %s", port, ip_add2);
-
         memset(&serv_addr, 0, sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
         serv_addr.sin_port = htons(port);
@@ -135,7 +126,7 @@ int main(int argc, char* argv[]){
 
         if( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         {
-            printf("\n Error : Could not create socket \n");
+            printf("\n Error : %s \n", strerror(errno));
             return 1;
         }
 
@@ -148,37 +139,29 @@ int main(int argc, char* argv[]){
 
     // got host name and not IP address
     else{
-        printf("didn't get ip...\n");
-
         hints.ai_family = AF_UNSPEC;
-        //hints.ai_socktype = SOCK_DGRAM;
         hints.ai_flags = 0;
         hints.ai_protocol = 0;
 
         success = getaddrinfo(argv[1], argv[2], &hints, &infoptr);
         if (success){
-            //TODO - print error message!
-            printf("could not connect...\n");
-            exit(1);
+            printf("\n Error : Could not connect %s\n", strerror(errno));
+            exit(-1);
         }
-        // TODO - might not work - need to check it!
-
         // creates a buffer for server response!
 
         if( (sockfd = socket(infoptr->ai_family, infoptr->ai_socktype, infoptr->ai_protocol)) < 0)
         {
-            printf("\n Error : Could not create socket \n");
-            return 1;
+            printf("\n Error : Could not create socket %s\n", strerror(errno));
+            exit(-1);
         }
 
         // connect
         if( connect(sockfd, (struct sockaddr*) (infoptr->ai_addr), infoptr->ai_addrlen) < 0)
         {
             printf("\n Error : Connect Failed. %s \n", strerror(errno));
-            return 1;
+            exit(-1);
         }
-        printf("Host name is addr is: %s\n", infoptr->ai_addr->sa_data);
-
     }
 
     read_from_devurandom(num_of_bytes_to_read ,random_bytes_buffer);
@@ -188,17 +171,9 @@ int main(int argc, char* argv[]){
     int notwritten = num_of_bytes_to_read;
 
     // first send the length of the stream
-
     while( notwritten > 0 )
     {
-        printf("sending data...\n");
         nsent = send(sockfd, random_bytes_buffer + totalsent, num_of_bytes_to_read, 0);
-        // check if error occured (client closed connection?)
-
-        // need to check it very carefully
-        if ( nsent >= 0){
-            printf("Client: wrote %d bytes\n", nsent);
-        }
 
         totalsent  += nsent;
         notwritten -= nsent;
@@ -207,19 +182,17 @@ int main(int argc, char* argv[]){
     //enable the socket listen again
     shutdown(sockfd, SHUT_WR);
 
-    printf("wait for reading...\n");
     bytes_read = read(sockfd, &count_from_server, sizeof(unsigned int));
-    printf("read from server...\n");
-    printf("count is %d \n", count_from_server);
+
+    //read from server...
     int real_amount_of_bytes = bytes_read;
-    while ( bytes_read <= real_amount_of_bytes ){
+    while ( bytes_read < sizeof(unsigned int)){
         bytes_read = read(sockfd, ((char*) &count_from_server) + real_amount_of_bytes, sizeof(unsigned int) - real_amount_of_bytes);
         real_amount_of_bytes += bytes_read;
     }
 
-
+    printf("# of printable characters: %u\n", count_from_server);
 
     close(sockfd); // is socket really done here?
-    // printf("Write after close returns %d\n", write(sockfd, recv_buff, 1));
     return 0;
 }
